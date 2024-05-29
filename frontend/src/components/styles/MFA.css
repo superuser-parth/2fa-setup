@@ -1,0 +1,82 @@
+/* src/components/MFA.css */
+
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  /* Container for the MFA Component */
+  .mfa-container {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  /* Header */
+  .mfa-container h2 {
+    margin-top: 0;
+    font-size: 24px;
+    color: #333333;
+  }
+  
+  /* Paragraphs */
+  .mfa-container p {
+    color: #666666;
+    margin: 10px 0;
+  }
+  
+  /* QR Code Image */
+  .mfa-container img {
+    margin-top: 20px;
+    width: 200px;
+    height: 200px;
+    border: 1px solid #dddddd;
+    border-radius: 10px;
+  }
+  
+  /* Input Field */
+  .mfa-container input[type="text"] {
+    width: calc(100% - 24px);
+    padding: 10px;
+    margin-top: 20px;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+  
+  /* Button */
+  .mfa-container button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 20px;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .mfa-container button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Loading and Error Messages */
+  .mfa-container .loading,
+  .mfa-container .error {
+    color: #ff0000;
+    margin-top: 10px;
+  }
+  

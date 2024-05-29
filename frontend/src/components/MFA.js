@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './styles/MFA.css'; // Import the CSS file
+import { useNavigate } from 'react-router-dom';
 
 const MFA = () => {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -11,6 +12,7 @@ const MFA = () => {
   const [totpCode, setTotpCode] = useState('');
   const [verificationResult, setVerificationResult] = useState(null);
   const token = localStorage.getItem('jwtToken');
+  const navigate = useNavigate()
 
   const fetchQR = async () => {
     try {
@@ -37,6 +39,7 @@ const MFA = () => {
         }
       });
       setVerificationResult(res.data.message);
+      navigate('/')
     } catch (err) {
       setVerificationResult(err.response ? err.response.data.message : err.message);
     }

@@ -18,7 +18,7 @@ function App() {
               <Route path="/mfa" element={<MFA/>}/>
           </Route>
     </Routes>
-    </Router>
+    </Router> 
   );
 }
 

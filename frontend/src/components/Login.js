@@ -7,6 +7,8 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
+//Need to pump up the contributions
+
   const handleLogin = async (e) => {
     e.preventDefault(); // Prevent the default form submission
     try {

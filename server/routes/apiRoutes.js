@@ -5,6 +5,7 @@ const { hashPassword, comparePasswords } = require('../utils/passwordUtils.js');
 const jwt = require('jsonwebtoken');
 const authKeys = require('../utils/authKeys.js');
 const speakeasy = require('speakeasy');
+const cookieParser = require('cookie-parser');
 const QRCode = require('qrcode');
 
 router.post('/register', async (req, res) => {
@@ -34,7 +35,11 @@ router.post('/register', async (req, res) => {
 });
 
 router.get('/generate-2fa', async (req, res) => {
-  const token = req.headers.authorization
+  const token = req.cookies.authToken;
+
+  if(!token){
+    return res.status(403).json({message:'No token found'})
+  }
 
   let decoded;
   try {
@@ -71,7 +76,7 @@ router.get('/generate-2fa', async (req, res) => {
 });
 
 router.post('/verify-2fa', async (req, res) => {
-  const token = req.headers.authorization
+  const token = req.cookies.authToken;
   const { totpCode } = req.body;
 
   try {
@@ -101,27 +106,34 @@ router.post('/verify-2fa', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-    const data = req.body;
-  
-    try {
-      const user = await User.findOne({ email: data.email }); // Added await
-  
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-  
-      const passwordMatch = await comparePasswords(data.password, user.password); // Added await
-      if (passwordMatch) {
-        const token = jwt.sign({ userId: user._id, email: user.email }, authKeys.jwtSecretKey, {
-          expiresIn: '3h',
-        });
-        return res.status(200).json({ message: 'User logged in successfully', token }); // Added token to response
-      } else {
-        return res.status(401).json({ message: 'Incorrect password' }); // Added response for incorrect password
-      }
-    } catch (err) {
-      return res.status(400).json({ message: 'Error logging in', error: err.message }); // Improved error message
-    }
-  });
+  const data = req.body;
 
+  try {
+    const user = await User.findOne({ email: data.email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const passwordMatch = await comparePasswords(data.password, user.password);
+    if (passwordMatch) {
+      const token = jwt.sign({ userId: user._id, email: user.email }, authKeys.jwtSecretKey, {
+        expiresIn: '3h',
+      });
+
+      // Set the token as a cookie
+      res.cookie('authToken', token, {
+        httpOnly: true, // Ensures the cookie is not accessible via JavaScript
+        maxAge: 3 * 60 * 60 * 1000, // 3 hours
+        sameSite: 'Strict' // Helps prevent CSRF attacks
+      });
+
+      return res.status(200).json({ message: 'User logged in successfully' });
+    } else {
+      return res.status(401).json({ message: 'Incorrect password' });
+    }
+  } catch (err) {
+    return res.status(400).json({ message: 'Error logging in', error: err.message });
+  }
+});
 module.exports = router;

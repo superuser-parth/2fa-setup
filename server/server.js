@@ -16,7 +16,10 @@ mongoose
   .then((res) => console.log("Connected to MongoDB Compass"))
   .catch((err) => console.error("Error connecting to MongoDB Compass:", err));
 
-app.use(cors())
+  app.use(cors({
+    origin: 'http://localhost:3000', // Replace with your frontend URL
+    credentials: true
+  }));
 app.use(express.json())
 
 app.use("/api", require("./routes/apiRoutes"));

@@ -14,6 +14,7 @@ const Login = () => {
     try {
       const response = await fetch('http://localhost:4444/api/login', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -26,13 +27,8 @@ const Login = () => {
         alert(errorData.message);
       } else {
         const data = await response.json();
-
-        if (data.token) {
-          localStorage.setItem('jwtToken', data.token);
-          navigate('/mfa');
-        } else {
-          alert('Token not found');
-        }
+        navigate('/')
+      
       }
     } catch (error) {
       console.error('Error logging in:', error);

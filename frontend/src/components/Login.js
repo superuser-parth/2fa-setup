@@ -27,7 +27,7 @@ const Login = () => {
         alert(errorData.message);
       } else {
         const data = await response.json();
-        navigate('/')
+        navigate('/mfa')
       
       }
     } catch (error) {

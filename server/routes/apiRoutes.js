@@ -7,48 +7,56 @@ const authKeys = require('../utils/authKeys.js');
 const speakeasy = require('speakeasy');
 const cookieParser = require('cookie-parser');
 const QRCode = require('qrcode');
+const verifyToken = require ('../middlewares/tokenAuth.js')
 
-router.post('/register', async (req, res) => {
-  const data = req.body;
 
+router.use(cookieParser());
+
+router.get('/protected', verifyToken, async (req, res) => {
   try {
-    const existingUser = await User.findOne({ email: data.email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' }); // Changed to res.json
+    const email = req.user.email;
+    const existingUser = await User.findOne({ email });
+
+    if (!existingUser) {
+      return res.status(403).json({ message: 'Invalid token' });
     }
 
-    const hashedPass = await hashPassword(data.password); // Added await for async hashPassword
+    // Respond with a success message or user data
+    return res.status(200).json({ message: 'Access granted', user: existingUser });
+  } catch (err) {
+    return res.status(500).json({ message: 'Internal server error', error: err.message });
+  }
+});
+
+router.post('/register', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    const hashedPass = await hashPassword(password);
     const secret = speakeasy.generateSecret({ length: 20 }).base32;
 
     let user = new User({
-      email: data.email,
+      email,
       password: hashedPass,
-      twofasecret: secret
+      twofasecret: secret,
     });
 
     await user.save();
 
     res.status(201).json({ message: 'User created successfully' });
   } catch (err) {
-    return res.status(400).json({ message: 'Error creating user', err }); // Improved error message
+    res.status(400).json({ message: 'Error creating user', error: err.message });
   }
-});
+}); 
 
-router.get('/generate-2fa', async (req, res) => {
-  const token = req.cookies.authToken;
-
-  if(!token){
-    return res.status(403).json({message:'No token found'})
-  }
-
-  let decoded;
-  try {
-    decoded = jwt.verify(token, authKeys.jwtSecretKey); // Use your actual secret
-  } catch (err) {
-    return res.status(401).json({ message: 'Invalid token', error: err.message });
-  }
-
-  const userEmail = decoded.email;
+router.get('/generate-2fa', verifyToken, async (req, res) => {
+  const userEmail = req.user.email;
+  console.log(userEmail)
 
   try {
     const user = await User.findOne({ email: userEmail });
@@ -60,7 +68,7 @@ router.get('/generate-2fa', async (req, res) => {
       secret: user.twofasecret,
       label: userEmail,
       issuer: 'stepCon',
-      encoding: 'base32'
+      encoding: 'base32',
     });
 
     QRCode.toDataURL(otpauthUrl, (err, dataUrl) => {
@@ -71,19 +79,15 @@ router.get('/generate-2fa', async (req, res) => {
       res.json({ qrCodeUrl: dataUrl });
     });
   } catch (err) {
-    return res.status(500).json({ message: 'Internal server error', error: err.message });
+    res.status(500).json({ message: 'Internal server error', error: err.message });
   }
 });
 
-router.post('/verify-2fa', async (req, res) => {
-  const token = req.cookies.authToken;
+router.post('/verify-2fa', verifyToken, async (req, res) => {
   const { totpCode } = req.body;
+  const userEmail = req.user.email;
 
   try {
-    // Decode JWT token to get user email (assuming you are using JWT)
-    const decodedToken = jwt.verify(token, authKeys.jwtSecretKey); 
-    const userEmail = decodedToken.email;
-
     const user = await User.findOne({ email: userEmail });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -92,48 +96,48 @@ router.post('/verify-2fa', async (req, res) => {
     const verified = speakeasy.totp.verify({
       secret: user.twofasecret,
       encoding: 'base32',
-      token: totpCode
+      token: totpCode,
     });
 
     if (verified) {
-      return res.status(200).json({ message: '2FA verification successful' });
+      res.status(200).json({ message: '2FA verification successful' });
     } else {
-      return res.status(400).json({ message: 'Invalid 2FA code' });
+      res.status(400).json({ message: 'Invalid 2FA code' });
     }
   } catch (err) {
-    return res.status(500).json({ message: 'Internal server error', error: err.message });
+    res.status(500).json({ message: 'Internal server error', error: err.message });
   }
 });
 
 router.post('/login', async (req, res) => {
-  const data = req.body;
+  const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email: data.email });
-
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const passwordMatch = await comparePasswords(data.password, user.password);
+    const passwordMatch = await comparePasswords(password, user.password);
     if (passwordMatch) {
       const token = jwt.sign({ userId: user._id, email: user.email }, authKeys.jwtSecretKey, {
         expiresIn: '3h',
       });
 
-      // Set the token as a cookie
       res.cookie('authToken', token, {
-        httpOnly: true, // Ensures the cookie is not accessible via JavaScript
+        httpOnly: true,
+       
         maxAge: 3 * 60 * 60 * 1000, // 3 hours
-        sameSite: 'Strict' // Helps prevent CSRF attacks
+        sameSite: 'Strict',
       });
 
-      return res.status(200).json({ message: 'User logged in successfully' });
+      res.status(200).json({ message: 'User logged in successfully' });
     } else {
-      return res.status(401).json({ message: 'Incorrect password' });
+      res.status(401).json({ message: 'Incorrect password' });
     }
   } catch (err) {
-    return res.status(400).json({ message: 'Error logging in', error: err.message });
+    res.status(400).json({ message: 'Error logging in', error: err.message });
   }
 });
+
 module.exports = router;

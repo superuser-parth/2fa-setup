@@ -11,16 +11,19 @@ const MFA = () => {
   const [error, setError] = useState(null);
   const [totpCode, setTotpCode] = useState('');
   const [verificationResult, setVerificationResult] = useState(null);
-  const token = localStorage.getItem('jwtToken');
   const navigate = useNavigate()
 
   const fetchQR = async () => {
     try {
       const res = await axios.get('http://localhost:4444/api/generate-2fa', {
+        withCredentials: true, // Correct option for sending cookies
         headers: {
-          Authorization: token
-        }
-      });
+          'Access-Control-Allow-Origin': '*', 
+          'Content-Type': 'application/json'
+      }
+      }
+      
+    );
       setQrCodeUrl(res.data.qrCodeUrl);
       setLoading(false);
     } catch (err) {
@@ -28,22 +31,25 @@ const MFA = () => {
       setLoading(false);
     }
   };
-
+  
   const verifyTotp = async () => {
     try {
       const res = await axios.post('http://localhost:4444/api/verify-2fa', {
         totpCode
       }, {
+        withCredentials: true,
         headers: {
-          Authorization: token
-        }
+          'Access-Control-Allow-Origin': '*', 
+          'Content-Type': 'application/json'
+      } // Correct option for sending cookies
       });
       setVerificationResult(res.data.message);
-      navigate('/')
+      navigate('/');
     } catch (err) {
       setVerificationResult(err.response ? err.response.data.message : err.message);
     }
   };
+  
 
   useEffect(() => {
     fetchQR();

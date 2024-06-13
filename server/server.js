@@ -1,12 +1,14 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
+const passport = require('passport');
 const bodyParser = require('body-parser')
 const app = express()
 const PORT = 4444
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended:true}))
+require('./config/passport')(passport);
 
 mongoose
   .connect('mongodb://localhost:27017/ratingMS', {
@@ -21,6 +23,12 @@ mongoose
     credentials: true
   }));
 app.use(express.json())
+
+// Passport middleware
+app.use(passport.initialize());
+
+// Passport config
+require('./config/passport')(passport);
 
 app.use("/api", require("./routes/apiRoutes"));
 

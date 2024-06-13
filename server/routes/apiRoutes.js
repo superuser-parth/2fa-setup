@@ -7,25 +7,19 @@ const authKeys = require('../utils/authKeys.js');
 const speakeasy = require('speakeasy');
 const cookieParser = require('cookie-parser');
 const QRCode = require('qrcode');
+const passport = require('passport');
 const verifyToken = require ('../middlewares/tokenAuth.js')
 
 
 router.use(cookieParser());
 
-router.get('/protected', verifyToken, async (req, res) => {
-  try {
-    const email = req.user.email;
-    const existingUser = await User.findOne({ email });
+router.get('/protected', passport.authenticate('jwt', { session: false }), (req, res) => {
+  res.json({ message: 'You have accessed a protected route', user: req.user });
+});
 
-    if (!existingUser) {
-      return res.status(403).json({ message: 'Invalid token' });
-    }
-
-    // Respond with a success message or user data
-    return res.status(200).json({ message: 'Access granted', user: existingUser });
-  } catch (err) {
-    return res.status(500).json({ message: 'Internal server error', error: err.message });
-  }
+router.post('/logout', (req, res) => {
+  res.cookie('authToken', '', { expires: new Date(0), httpOnly: true, path: '/' });
+  res.status(200).json({ message: 'Logged out successfully' });
 });
 
 router.post('/register', async (req, res) => {

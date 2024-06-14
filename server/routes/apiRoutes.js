@@ -103,17 +103,12 @@ router.post('/verify-2fa', verifyToken, async (req, res) => {
   }
 });
 
- router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-
+router.post('/login', async (req, res) => {
+  const{email, password} = req.body;
   try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
 
-    const passwordMatch = await comparePasswords(password, user.password);
-    if (passwordMatch) {
+    const user = await User.findOne({ email});
+
       const token = jwt.sign({ userId: user._id, email: user.email }, authKeys.jwtSecretKey, {
         expiresIn: '3h',
       });
@@ -126,9 +121,7 @@ router.post('/verify-2fa', verifyToken, async (req, res) => {
       });
 
       res.status(200).json({ message: 'User logged in successfully' });
-    } else {
-      res.status(401).json({ message: 'Incorrect password' });
-    }
+    
   } catch (err) {
     res.status(400).json({ message: 'Error logging in', error: err.message });
   }

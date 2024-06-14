@@ -17,6 +17,24 @@ const handleLogin = async (e) => {
   e.preventDefault();
   try {
     await signInWithEmailAndPassword(auth, email, password);
+
+      const response = await fetch('http://localhost:4444/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password }),
+      credentials: 'include' // Important: include credentials in the request
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to log in');
+    }
+
+    // Handle the response if needed
+    const data = await response.json();
+    console.log('Response data:', data);
+
     navigate('/mfa');
   } catch (error) {
     setError(error.message); // Set the error message

@@ -12,11 +12,9 @@ function App() {
     <Router>
     <Routes>
       <Route path="/login" element={<Login/>}/>
-     
-      <Route element={<ProtectedRoute/>}>
               <Route path='/' element={<Home/>}/>
               <Route path="/mfa" element={<MFA/>}/>
-          </Route>
+
     </Routes>
     </Router> 
   );

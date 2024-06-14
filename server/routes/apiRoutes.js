@@ -103,7 +103,7 @@ router.post('/verify-2fa', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
@@ -132,6 +132,6 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     res.status(400).json({ message: 'Error logging in', error: err.message });
   }
-});
+}); 
 
 module.exports = router;
